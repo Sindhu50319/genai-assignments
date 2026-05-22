@@ -1,0 +1,17 @@
+
+1)
+Read my entire workspace and understand how UI implemented in the frontend folder
+
+I want to add "Connect Jira" button to establish the connection(Base url
+Email id,Jira API key_)
+
+once the jira is connected userstories should be populated in the UI screen.
+
+[STRICTLY] DO THE IMPLEMENTATION ONLY ON UI
+
+
+2)In the front end UI add the Jira connect button before the generate button
+When we click on Jira connect button the 3 fields should be displayed in the popup and allow user to fill the details and connect to Jira
+Add feature file button beside generate button.
+once we click on feature file button the feature file should be generated  for the selected userstory
+[strict]the existing finctionality should work as it is 

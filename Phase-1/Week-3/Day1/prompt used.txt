@@ -1,0 +1,47 @@
+ 1)Read the Entire workspace and understand how I implemented the selenium Java
+
+   I want to add the same playwright with type script
+
+2)Context:
+You are enhancing an existing Chrome Extension Code Generator application.
+
+Requirements:
+
+[MUST]
+Add a new option named "Test Cases" in the "Code Generator" tab, positioned beside the existing Page Class option.
+
+[MUST]
+When the user selects the "Test Cases" option, the application must generate Functional Test Cases dynamically based on:
+1. Selected Programming Language
+2. Selected Browser Engine
+
+[MUST]
+The generated test cases should align with the output/code generated for the selected framework and browser configuration.
+
+[STRICT]
+Do NOT modify or break the existing functionality of:
+- Inspect button
+- Generate button
+- Existing Page Class generation flow
+
+[MANDATORY]
+The generated test cases output must be displayed in tabular format with the following columns:
+1. Scenario
+2. Steps
+3. Expected Result
+4. Actual Result
+
+[MANDATORY]
+Generate exactly 5 test cases only.
+
+[MANDATORY]
+Include only Priority P1 and P2 functional test cases.
+
+[STRICT]
+Do NOT generate duplicate test cases.
+
+[STRICT]
+Generate only functional test cases relevant to the generated automation flow.
+
+Expected Outcome:
+A new "Test Cases" feature is added without impacting existing extension behavior, and users can generate structured functional test cases based on selected language and browser engine.
