@@ -1,0 +1,62 @@
+{
+  "info": {
+    "_postman_id": "8a4952a2-47b7-411d-96c8-a3051163b984",
+    "name": "Langflow_UserstoryReview Agent",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "21258982",
+    "_collection_link": "https://go.postman.co/collection/21258982-8a4952a2-47b7-411d-96c8-a3051163b984?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "http://127.0.0.1:7860/api/v1/run/e1fcba49-a078-4884-bf8e-f9f14e314887?stream=false ",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-api-key",
+            "value": "sk-_5dyCyj2lBN65cSeWaRFAnglxfSIMz77eG5PqZH73JA"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n\t\t           \"output_type\": \"text\",\r\n\t\t           \"input_type\": \"text\",\r\n\t\t           \"input_value\": \"Review the fetched userstory as per prompt\",\r\n\t\t           \"tweaks\": {\r\n\t\t             \"APIRequest-pgIg5\": {\r\n\t\t               \"body\": [\r\n\t\t                 {\r\n\t\t                   \"key\": \"jql\",\r\n\t\t                   \"value\": \"key = \\\"SRSTR-7\\\"\"\r\n\t\t                 },\r\n\t\t                 {\r\n\t\t                   \"key\": \"fields\",\r\n\t\t                   \"value\": \"[\\\"key\\\", \\\"summary\\\", \\\"description\\\", \\\"customfield_10072\\\", \\\"status\\\", \\\"reporter\\\"]\"\r\n\t\t                 },\r\n\t\t                 {\r\n\t\t                   \"key\": \"maxResults\",\r\n\t\t                   \"value\": \"1\"\r\n\t\t                 }\r\n\t\t               ]\r\n\t\t             },\r\n\t\t             \"GroqModel-01qDe\": {\r\n\t\t               \"model_name\": \"llama-3.1-8b-instant\"\r\n\t\t             },\r\n\t\t             \"Prompt Template-1xYDY\": {\r\n\t\t               \"template\": \"For this given Input as user story : {userStory}, follow these;\\n\\nInstructions\\n\\nYou are an expert AI assistant specialized in Business Analysis for Healthcare.\\nYour task is to analyze and review the uploaded user story document based on multiple quality dimensions and provide:\\n\\nIndividual parameter scores (each out of 20)\\nOverall quality score (out of 100)\\n\\nSpecific improvement recommendations for each weak parameter\\nEvaluate the user story against the following five parameters:\\nClarity: Is the story easy to understand and unambiguous?\\nCompleteness: Are acceptance criteria and preconditions well-defined?\\nBusiness Value Alignment: Does it reflect tangible healthcare value (e.g., patient safety, compliance, operational efficiency)?\\nTestability: Can QA engineers easily derive test cases from it?\\nTechnical Feasibility: Is it practically implementable within typical healthcare system constraints?\\n\\nFinally, provide an overall rating and improvement summary.\\n\\nContext\\n\\nThe input user story belongs to the Healthcare domain — specifically dealing with hospital systems, patient records, clinical workflows, and compliance (like HIPAA or PoPIA).\\nAssume that this story will be used by a cross-functional team (BA, QA, Developer) in a regulated healthcare project.\\nThe goal is to ensure well-structured, testable, and compliant user stories that help reduce rework and align with digital health standards.\\nGive the output as html\\n\\nExample\\n\\nExample Input (User Story Summary):\\n\\nAs a doctor, I want to review and approve patient prescriptions digitally before they reach the pharmacy, ensuring safety and compliance.\\n\\nExample Output:\\n\\nParameter\\tDescription\\tScore (out of 20)\\nClarity\\tThe story is straightforward but lacks detailed acceptance criteria.\\t16\\nCompleteness\\tPreconditions not clearly mentioned.\\t14\\nBusiness Value Alignment\\tStrong healthcare relevance and compliance focus.\\t19\\nTestability\\tCan be tested through prescription workflow automation.\\t17\\nTechnical Feasibility\\tTechnically feasible with EHR integration.\\t18\\n\\nOverall Score: 84 / 100\\n\\nImprovement Areas:\\n\\nAdd explicit acceptance criteria for prescription error handling.\\nSpecify validation rules for dosage and duplicate drugs.\\nInclude system actor details for approval workflow.\\n\\nPersona\\n\\nYou are acting as a senior business analyst with 10+ years of experience in healthcare IT systems, specializing in EHR (Electronic Health Records), clinical workflow automation, and regulatory compliance (HIPAA, HL7, PoPIA).\\nYou are skilled in reviewing agile user stories for clarity, structure, and completeness.\\n\\n\\nT – Tone\\n\\nProfessional, analytical, and constructive — similar to a BA review summary for a healthcare project stakeholder meeting.\\nAvoid generic feedback; emphasize actionable, healthcare-specific improvements. \\n\\n{query}\"\r\n\t\t             }\r\n\t\t           }\r\n\t\t          \r\n\t\t         }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:7860/api/v1/run/e1fcba49-a078-4884-bf8e-f9f14e314887",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "7860",
+          "path": [
+            "api",
+            "v1",
+            "run",
+            "e1fcba49-a078-4884-bf8e-f9f14e314887"
+          ],
+          "query": [
+            {
+              "key": "stream",
+              "value": "false ",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "Generated from cURL: curl --request POST \\\r\n     --url 'http://127.0.0.1:7860/api/v1/run/e1fcba49-a078-4884-bf8e-f9f14e314887?stream=false' \\\r\n     --header 'Content-Type: application/json' \\\r\n     --header \"x-api-key: YOUR_API_KEY_HERE\" \\ \r\n     --data '{\r\n\t\t           \"output_type\": \"text\",\r\n\t\t           \"input_type\": \"text\",\r\n\t\t           \"input_value\": \"hello world!\",\r\n\t\t           \"tweaks\": {\r\n\t\t             \"APIRequest-pgIg5\": {\r\n\t\t               \"body\": [\r\n\t\t                 {\r\n\t\t                   \"key\": \"jql\",\r\n\t\t                   \"value\": \"key = \\\"SRSTR-8\\\"\"\r\n\t\t                 },\r\n\t\t                 {\r\n\t\t                   \"key\": \"fields\",\r\n\t\t                   \"value\": \"[\\\"key\\\", \\\"summary\\\", \\\"description\\\", \\\"customfield_10072\\\", \\\"status\\\", \\\"reporter\\\"]\"\r\n\t\t                 },\r\n\t\t                 {\r\n\t\t                   \"key\": \"maxResults\",\r\n\t\t                   \"value\": \"1\"\r\n\t\t                 }\r\n\t\t               ]\r\n\t\t             },\r\n\t\t             \"GroqModel-01qDe\": {\r\n\t\t               \"model_name\": \"llama-3.1-8b-instant\"\r\n\t\t             },\r\n\t\t             \"Prompt Template-1xYDY\": {\r\n\t\t               \"template\": \"For this given Input as user story : {userStory}, follow these;\\n\\nInstructions\\n\\nYou are an expert AI assistant specialized in Business Analysis for Healthcare.\\nYour task is to analyze and review the uploaded user story document based on multiple quality dimensions and provide:\\n\\nIndividual parameter scores (each out of 20)\\nOverall quality score (out of 100)\\n\\nSpecific improvement recommendations for each weak parameter\\nEvaluate the user story against the following five parameters:\\nClarity: Is the story easy to understand and unambiguous?\\nCompleteness: Are acceptance criteria and preconditions well-defined?\\nBusiness Value Alignment: Does it reflect tangible healthcare value (e.g., patient safety, compliance, operational efficiency)?\\nTestability: Can QA engineers easily derive test cases from it?\\nTechnical Feasibility: Is it practically implementable within typical healthcare system constraints?\\n\\nFinally, provide an overall rating and improvement summary.\\n\\nContext\\n\\nThe input user story belongs to the Healthcare domain — specifically dealing with hospital systems, patient records, clinical workflows, and compliance (like HIPAA or PoPIA).\\nAssume that this story will be used by a cross-functional team (BA, QA, Developer) in a regulated healthcare project.\\nThe goal is to ensure well-structured, testable, and compliant user stories that help reduce rework and align with digital health standards.\\nGive the output as html\\n\\nExample\\n\\nExample Input (User Story Summary):\\n\\nAs a doctor, I want to review and approve patient prescriptions digitally before they reach the pharmacy, ensuring safety and compliance.\\n\\nExample Output:\\n\\nParameter\\tDescription\\tScore (out of 20)\\nClarity\\tThe story is straightforward but lacks detailed acceptance criteria.\\t16\\nCompleteness\\tPreconditions not clearly mentioned.\\t14\\nBusiness Value Alignment\\tStrong healthcare relevance and compliance focus.\\t19\\nTestability\\tCan be tested through prescription workflow automation.\\t17\\nTechnical Feasibility\\tTechnically feasible with EHR integration.\\t18\\n\\nOverall Score: 84 / 100\\n\\nImprovement Areas:\\n\\nAdd explicit acceptance criteria for prescription error handling.\\nSpecify validation rules for dosage and duplicate drugs.\\nInclude system actor details for approval workflow.\\n\\nPersona\\n\\nYou are acting as a senior business analyst with 10+ years of experience in healthcare IT systems, specializing in EHR (Electronic Health Records), clinical workflow automation, and regulatory compliance (HIPAA, HL7, PoPIA).\\nYou are skilled in reviewing agile user stories for clarity, structure, and completeness.\\n\\n\\nT – Tone\\n\\nProfessional, analytical, and constructive — similar to a BA review summary for a healthcare project stakeholder meeting.\\nAvoid generic feedback; emphasize actionable, healthcare-specific improvements. \\n\\n{query}\"\r\n\t\t             }\r\n\t\t           },\r\n\t\t           \"session_id\": \"YOUR_SESSION_ID_HERE\"\r\n\t\t         }'"
+      },
+      "response": []
+    }
+  ]
+}
