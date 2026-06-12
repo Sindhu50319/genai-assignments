@@ -402,7 +402,7 @@
                 "value": [
                   {
                     "key": "Authorization",
-                    "value": "Basic YWxsdXJpLnNpbmRodTUwM0BnbWFpbC5jb206QVRBVFQzeEZmR0YwUnRYN21wTkcyR0NUb2ZTenhjRUVibDZWUGV0Q2dMV3VPOWEyNWJ6TnowaUo3WElCUlg2bC1DMV9XZjc3RE0xOTZPYVpzR2YzR3ZuaWl0MU42cjVkVk8wQmdIRzVqWVhLYWQ5TWhRV0tuZVlzZFgxVUdqOVBVeTFPUVFPcjhaVXB4RTJvUzVIdEJQSDZpYnQ4c29uRkx5aEZ5ZXFRQWtqd3NDWkIzT25yeGhJPTE0MzY1RDdF"
+                    "value": "Basic YOUR_JIRA_BASIC_AUTH_TOKEN"
                   }
                 ]
               },
@@ -942,7 +942,7 @@
                 "title_case": false,
                 "track_in_telemetry": false,
                 "type": "str",
-                "value": "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"
+                "value": "YOUR_GROQ_API_KEY"
               },
               "base_url": {
                 "_input_type": "MessageTextInput",
