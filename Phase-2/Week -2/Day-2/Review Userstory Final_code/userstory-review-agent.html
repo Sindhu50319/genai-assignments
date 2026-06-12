@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Story Review Agent</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #0052cc;
+      --primary-dark: #003d99;
+      --primary-light: #e6f0ff;
+      --accent: #00b8d9;
+      --success: #36b37e;
+      --warning: #ff991f;
+      --danger: #de350b;
+      --text: #172b4d;
+      --text-light: #5e6c84;
+      --border: #dfe1e6;
+      --bg: #f4f5f7;
+      --card: #ffffff;
+      --shadow-sm: 0 1px 3px rgba(9,30,66,.12), 0 0 0 1px rgba(9,30,66,.08);
+      --shadow-md: 0 4px 16px rgba(9,30,66,.16), 0 0 0 1px rgba(9,30,66,.06);
+      --shadow-lg: 0 8px 32px rgba(9,30,66,.20), 0 0 0 1px rgba(9,30,66,.06);
+      --radius: 8px;
+      --radius-lg: 12px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: var(--primary);
+      color: #fff;
+      padding: 0 32px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: var(--shadow-sm);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-brand { display: flex; align-items: center; gap: 12px; }
+    .header-logo {
+      width: 32px; height: 32px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .header h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+    .header-subtitle { font-size: 12px; opacity: .75; margin-top: 1px; }
+    .btn-open-chat {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.15);
+      border: 1.5px solid rgba(255,255,255,0.35);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: background .15s;
+    }
+    .btn-open-chat:hover { background: rgba(255,255,255,0.25); }
+    .btn-open-chat .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #57d9a3;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+    /* ── Main Layout ── */
+    .main { display: flex; gap: 24px; padding: 28px 32px; max-width: 1400px; margin: 0 auto; }
+    .content { flex: 1; display: flex; flex-direction: column; gap: 20px; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      padding: 24px;
+    }
+    .card-title {
+      font-size: 16px; font-weight: 700; color: var(--text);
+      margin-bottom: 16px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .card-title-icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .icon-blue  { background: #e6f0ff; }
+    .icon-green { background: #e3fcef; }
+    .icon-purple{ background: #f0e6ff; }
+
+    /* ── How To Use ── */
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 12px; }
+    .step {
+      background: var(--bg);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+    }
+    .step-num {
+      width: 28px; height: 28px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 50%;
+      font-size: 13px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 10px;
+    }
+    .step p { font-size: 13px; color: var(--text-light); line-height: 1.5; }
+
+    /* ── Jira Selector ── */
+    .jira-controls { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 180px; }
+    label { font-size: 12px; font-weight: 600; color: var(--text-light); text-transform: uppercase; letter-spacing: .5px; }
+    select, input[type="text"] {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 9px 12px;
+      font-size: 14px;
+      color: var(--text);
+      background: #fff;
+      outline: none;
+      transition: border-color .15s;
+    }
+    select:focus, input[type="text"]:focus { border-color: var(--primary); }
+    .jira-status { font-size: 12px; color: var(--text-light); margin-top: 8px; display: flex; align-items: center; gap: 6px; }
+
+    /* ── Sample Story ── */
+    .sample-story {
+      background: #f8f9fa;
+      border: 1.5px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 16px;
+      font-size: 13.5px;
+      line-height: 1.7;
+      color: var(--text);
+      white-space: pre-wrap;
+      font-family: inherit;
+    }
+    .sample-actions { display: flex; gap: 8px; margin-top: 12px; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 14px;
+      border-radius: var(--radius);
+      font-size: 13px; font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all .15s;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-primary:disabled { opacity: .6; cursor: not-allowed; }
+    .btn-secondary { background: #fff; color: var(--primary); border: 1.5px solid var(--border); }
+    .btn-secondary:hover { border-color: var(--primary); background: var(--primary-light); }
+    .btn-ghost { background: transparent; color: var(--text-light); border: 1.5px solid var(--border); }
+    .btn-ghost:hover { background: var(--bg); }
+    .btn-danger { background: #fff0ee; color: var(--danger); border: 1.5px solid #ffbdad; }
+    .btn-danger:hover { background: #ffe5e0; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+    /* ── Chat Panel ── */
+    .chat-panel {
+      position: fixed;
+      top: 70px;
+      right: 32px;
+      width: 420px;
+      height: calc(100vh - 90px);
+      background: var(--card);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      flex-direction: column;
+      z-index: 500;
+      transform: translateX(calc(100% + 48px));
+      transition: transform .3s cubic-bezier(.4,0,.2,1);
+      overflow: hidden;
+    }
+    .chat-panel.open { transform: translateX(0); }
+
+    .chat-header {
+      background: var(--primary);
+      color: #fff;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .chat-header-info { display: flex; align-items: center; gap: 10px; }
+    .chat-avatar {
+      width: 36px; height: 36px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .chat-title { font-size: 14px; font-weight: 700; }
+    .chat-session { font-size: 11px; opacity: .7; margin-top: 1px; }
+    .chat-header-actions { display: flex; gap: 6px; }
+    .icon-btn {
+      width: 30px; height: 30px;
+      background: rgba(255,255,255,0.15);
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s;
+    }
+    .icon-btn:hover { background: rgba(255,255,255,0.28); }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: #f8faff;
+    }
+    .chat-messages::-webkit-scrollbar { width: 4px; }
+    .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .msg { display: flex; flex-direction: column; max-width: 92%; }
+    .msg.user { align-self: flex-end; align-items: flex-end; }
+    .msg.ai   { align-self: flex-start; align-items: flex-start; }
+
+    .msg-bubble {
+      padding: 12px 14px;
+      border-radius: 14px;
+      font-size: 13.5px;
+      line-height: 1.6;
+      word-break: break-word;
+    }
+    .msg.user .msg-bubble {
+      background: var(--primary);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+    .msg.ai .msg-bubble {
+      background: #fff;
+      color: var(--text);
+      border-bottom-left-radius: 4px;
+      box-shadow: var(--shadow-sm);
+    }
+    .msg-meta {
+      font-size: 11px;
+      color: var(--text-light);
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .loading-msg .msg-bubble {
+      display: flex; align-items: center; gap: 10px;
+      color: var(--text-light);
+    }
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .welcome-msg {
+      text-align: center;
+      padding: 24px 16px;
+      color: var(--text-light);
+    }
+    .welcome-msg .welcome-icon { font-size: 36px; margin-bottom: 10px; }
+    .welcome-msg h3 { font-size: 15px; color: var(--text); margin-bottom: 6px; }
+    .welcome-msg p { font-size: 13px; line-height: 1.6; }
+
+    .chat-input-area {
+      padding: 14px;
+      border-top: 1.5px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+      background: #fff;
+    }
+    .chat-textarea {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      font-size: 13.5px;
+      font-family: inherit;
+      resize: none;
+      outline: none;
+      min-height: 80px;
+      max-height: 160px;
+      color: var(--text);
+      transition: border-color .15s;
+    }
+    .chat-textarea:focus { border-color: var(--primary); }
+    .chat-actions { display: flex; justify-content: space-between; align-items: center; }
+    .char-count { font-size: 11px; color: var(--text-light); }
+
+    /* ── Jira badge on stories ── */
+    .jira-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: #e6f0ff; color: var(--primary);
+      border-radius: 4px;
+      padding: 2px 7px;
+      font-size: 11px; font-weight: 600;
+    }
+
+    /* ── Alert ── */
+    .alert {
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      display: flex; align-items: flex-start; gap: 10px;
+    }
+    .alert-error { background: #fff0ee; border: 1.5px solid #ffbdad; color: #bf2600; }
+    .alert-info  { background: #e6f0ff; border: 1.5px solid #b3d4ff; color: var(--primary); }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .main { flex-direction: column; padding: 16px; }
+      .chat-panel { right: 8px; left: 8px; width: auto; }
+      .header { padding: 0 16px; }
+      .steps { grid-template-columns: repeat(2,1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════ HEADER ═══════════════════════════════════════ -->
+<header class="header">
+  <div class="header-brand">
+    <div class="header-logo">🤖</div>
+    <div>
+      <div class="header h1" style="font-size:18px;font-weight:700;">User Story Review Agent</div>
+      <div class="header-subtitle">AI-powered review for Jira User Stories</div>
+    </div>
+  </div>
+  <button class="btn-open-chat" onclick="toggleChat()">
+    <div class="dot"></div>
+    <span id="chat-btn-label">Open Review Agent</span>
+  </button>
+</header>
+
+<!-- ═══════════════════════════════════════ CORS BANNER ═══════════════════════════════════════ -->
+<div id="proxy-banner" style="background:#e3fcef;border-bottom:2px solid #57d9a3;padding:10px 32px;display:flex;align-items:center;justify-content:space-between;gap:16px;font-size:13px;color:#172b4d;">
+  <span>
+    ⚡ <strong>One-time setup — open a terminal in the project folder and run:</strong>
+    &nbsp;<code style="background:#fff;border:1px solid #b3f5d8;border-radius:4px;padding:2px 8px;font-size:12px;user-select:all;">node proxy.js</code>
+    &nbsp;→ starts a local CORS proxy on <strong>port 8080</strong>. No npm install needed — pure Node.js. Leave the terminal open while using this page.
+  </span>
+  <button onclick="document.getElementById('proxy-banner').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:18px;color:#5e6c84;flex-shrink:0;">✕</button>
+</div>
+
+<!-- ═══════════════════════════════════════ MAIN ═══════════════════════════════════════ -->
+<div class="main">
+  <div class="content">
+
+    <!-- How to Use -->
+    <div class="card">
+      <div class="card-title">
+        <div class="card-title-icon icon-blue">📖</div>
+        How to Use
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <p>Click <strong>Open Review Agent</strong> in the top-right corner to open the chat panel.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <p>Select a Jira user story from the dropdown, or paste your own user story text.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <p>Click <strong>Send for Review</strong> and wait for the AI to analyse your user story.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <p>Read the detailed review, copy it, or clear the chat to start a new review.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Jira Story Selector -->
+    <div class="card">
+      <div class="card-title">
+        <div class="card-title-icon icon-purple">🔗</div>
+        Jira User Story Selector
+      </div>
+      <div class="jira-controls">
+        <div class="form-group" style="flex:2">
+          <label>Select Jira User Story</label>
+          <select id="jira-select" onchange="onJiraSelect()">
+            <option value="">-- Loading stories from Jira… --</option>
+          </select>
+        </div>
+        <button class="btn btn-secondary" onclick="fetchJiraStories()">🔄 Refresh</button>
+        <button class="btn btn-primary" id="btn-send-jira" onclick="sendJiraStory()" disabled>Send Selected Story →</button>
+      </div>
+      <div class="jira-status" id="jira-status">
+        <span class="spinner" style="width:12px;height:12px;border-width:1.5px"></span>
+        Fetching stories from Jira…
+      </div>
+    </div>
+
+    <!-- Sample User Story -->
+    <div class="card">
+      <div class="card-title">
+        <div class="card-title-icon icon-green">📋</div>
+        Sample Fund Transfer User Story
+      </div>
+      <pre class="sample-story" id="sample-story-text">As a customer,
+I want to transfer funds between my accounts,
+So that I can manage my finances without visiting a branch.
+
+Acceptance Criteria:
+• User can select source account
+• User can select destination account
+• User can enter transfer amount
+• Amount must be greater than zero
+• Confirmation message should be displayed
+• Transaction should be saved successfully</pre>
+      <div class="sample-actions">
+        <button class="btn btn-secondary" onclick="copySample()">📋 Copy Sample Story</button>
+        <button class="btn btn-primary" onclick="pasteSampleToChat()">📨 Paste into Chat &amp; Review</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ CHAT PANEL ═══════════════════════════════════════ -->
+<div class="chat-panel" id="chat-panel">
+  <div class="chat-header">
+    <div class="chat-header-info">
+      <div class="chat-avatar">🤖</div>
+      <div>
+        <div class="chat-title">User Story Review Agent</div>
+        <div class="chat-session" id="session-display">Session: —</div>
+      </div>
+    </div>
+    <div class="chat-header-actions">
+      <button class="icon-btn" title="Clear chat" onclick="clearChat()">🗑</button>
+      <button class="icon-btn" title="Close" onclick="toggleChat()">✕</button>
+    </div>
+  </div>
+
+  <div class="chat-messages" id="chat-messages">
+    <div class="welcome-msg">
+      <div class="welcome-icon">👋</div>
+      <h3>Hello! I'm your User Story Review Agent.</h3>
+      <p>Paste or select a Jira User Story and I'll review it for clarity, completeness, and quality — so it's dev-ready before sprint planning.</p>
+    </div>
+  </div>
+
+  <div class="chat-input-area">
+    <textarea
+      class="chat-textarea"
+      id="chat-input"
+      placeholder="Paste your Jira User Story here…"
+      oninput="updateCharCount()"
+      onkeydown="onTextareaKeydown(event)"
+    ></textarea>
+    <div class="chat-actions">
+      <span class="char-count" id="char-count">0 characters</span>
+      <button class="btn btn-primary" id="send-btn" onclick="sendMessage()">
+        ✈ Send for Review
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ SCRIPT ═══════════════════════════════════════ -->
+<script>
+  /* ── CONFIG ─────────────────────────────────────────────────── */
+  const CONFIG = {
+    langflowUrl: 'http://localhost:7860/api/v1/run/e1fcba49-a078-4884-bf8e-f9f14e314887',
+    langflowApiKey: 'sk-_5dyCyj2lBN65cSeWaRFAnglxfSIMz77eG5PqZH73JA',
+    corsProxy: 'http://localhost:8080/',
+    jiraBaseUrl: 'https://allurisindhu503.atlassian.net',
+    jiraAuthHeader: 'Basic YWxsdXJpLnNpbmRodTUwM0BnbWFpbC5jb206QVRBVFQzeEZmR0YwUnRYN21wTkcyR0NUb2ZTenhjRUVibDZWUGV0Q2dMV3VPOWEyNWJ6TnowaUo3WElCUlg2bC1DMV9XZjc3RE0xOTZPYVpzR2YzR3ZuaWl0MU42cjVkVk8wQmdIRzVqWVhLYWQ5TWhRV0tuZVlzZFgxVUdqOVBVeTFPUVFPcjhaVXB4RTJvUzVIdEJQSDZpYnQ4c29uRkx5aEZ5ZXFRQWtqd3NDWkIzT25yeGhJPTE0MzY1RDdF',
+    jiraJql: 'issuetype = Story ORDER BY created DESC',
+    jiraMaxResults: 50,
+  };
+
+  /* ── STATE ──────────────────────────────────────────────────── */
+  const sessionId = 'session-' + Math.random().toString(36).slice(2, 11);
+  let chatOpen = false;
+  let isLoading = false;
+  let jiraStories = [];
+
+  /* ── INIT ───────────────────────────────────────────────────── */
+  document.getElementById('session-display').textContent = 'Session: ' + sessionId.slice(8);
+  fetchJiraStories();
+
+  /* ── CHAT TOGGLE ────────────────────────────────────────────── */
+  function toggleChat() {
+    chatOpen = !chatOpen;
+    document.getElementById('chat-panel').classList.toggle('open', chatOpen);
+    document.getElementById('chat-btn-label').textContent = chatOpen ? 'Close Review Agent' : 'Open Review Agent';
+  }
+
+  /* ── JIRA ───────────────────────────────────────────────────── */
+  async function fetchJiraStories() {
+    const statusEl = document.getElementById('jira-status');
+    const selectEl = document.getElementById('jira-select');
+    statusEl.innerHTML = '<span class="spinner" style="width:12px;height:12px;border-width:1.5px"></span> Fetching stories from Jira via local proxy…';
+    selectEl.innerHTML = '<option value="">-- Loading… --</option>';
+    document.getElementById('btn-send-jira').disabled = true;
+
+    const proxiedUrl = CONFIG.corsProxy + CONFIG.jiraBaseUrl + '/rest/api/3/search/jql';
+
+    try {
+      const res = await fetch(proxiedUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': CONFIG.jiraAuthHeader,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-Atlassian-Token': 'no-check',
+        },
+        body: JSON.stringify({
+          jql: CONFIG.jiraJql,
+          fields: ['key', 'summary', 'description', 'customfield_10072', 'status', 'reporter'],
+          maxResults: CONFIG.jiraMaxResults,
+        }),
+      });
+
+      if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        throw new Error('HTTP ' + res.status + ' — ' + (body.slice(0, 120) || res.statusText));
+      }
+
+      const data = await res.json();
+      jiraStories = data.issues || [];
+
+      if (jiraStories.length === 0) {
+        selectEl.innerHTML = '<option value="">-- No stories found for this JQL --</option>';
+        statusEl.innerHTML = `<span style="color:var(--warning)">⚠</span> 0 stories returned. Check JQL filter.`;
+        return;
+      }
+
+      selectEl.innerHTML = '<option value="">-- Select a User Story --</option>' +
+        jiraStories.map(issue => {
+          const key = issue.key;
+          const summary = issue.fields?.summary || '(no summary)';
+          return `<option value="${key}">[${key}] ${escapeHtml(summary)}</option>`;
+        }).join('');
+
+      statusEl.innerHTML = `<span style="color:var(--success)">✓</span> ${jiraStories.length} stories loaded from Jira.`;
+    } catch (err) {
+      selectEl.innerHTML = '<option value="">-- Could not load stories --</option>';
+      const isProxyDown = err.message.includes('Failed to fetch') || err.message.includes('NetworkError');
+      statusEl.innerHTML = isProxyDown
+        ? `<span style="color:var(--danger)">⚠ Proxy not running.</span> Open a terminal in the project folder and run: <code style="background:#f4f5f7;padding:1px 6px;border-radius:3px">node proxy.js</code> — then click 🔄 Refresh.`
+        : `<span style="color:var(--danger)">⚠ Jira error:</span> ${escapeHtml(err.message)}`;
+    }
+  }
+
+  function onJiraSelect() {
+    const val = document.getElementById('jira-select').value;
+    document.getElementById('btn-send-jira').disabled = !val;
+  }
+
+  function sendJiraStory() {
+    const key = document.getElementById('jira-select').value;
+    if (!key) return;
+    const issue = jiraStories.find(i => i.key === key);
+    if (!issue) return;
+
+    const summary = issue.fields?.summary || '';
+    const description = extractJiraText(issue.fields?.description) || '';
+    const ac = extractJiraText(issue.fields?.customfield_10072) || '';
+
+    let storyText = `[${key}] ${summary}`;
+    if (description) storyText += '\n\n' + description;
+    if (ac) storyText += '\n\nAcceptance Criteria:\n' + ac;
+
+    if (!chatOpen) toggleChat();
+    document.getElementById('chat-input').value = storyText;
+    updateCharCount();
+    setTimeout(sendMessage, 100);
+  }
+
+  function extractJiraText(node) {
+    if (!node) return '';
+    if (typeof node === 'string') return node;
+    if (node.content) {
+      return node.content.map(c => {
+        if (c.type === 'text') return c.text || '';
+        if (c.content) return extractJiraText(c);
+        return '';
+      }).join('');
+    }
+    return '';
+  }
+
+  /* ── CHAT ───────────────────────────────────────────────────── */
+  function updateCharCount() {
+    const len = document.getElementById('chat-input').value.length;
+    document.getElementById('char-count').textContent = len + ' character' + (len !== 1 ? 's' : '');
+  }
+
+  function onTextareaKeydown(e) {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
+
+  async function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    if (!text || isLoading) return;
+
+    appendUserMessage(text);
+    input.value = '';
+    updateCharCount();
+    const loadingId = appendLoadingMessage();
+    setLoading(true);
+
+    try {
+      const headers = {
+        'Content-Type': 'application/json',
+        'x-api-key': CONFIG.langflowApiKey,
+      };
+
+      const res = await fetch(CONFIG.langflowUrl + '?session_id=' + encodeURIComponent(sessionId), {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          input_value: text,
+          input_type: 'text',
+          output_type: 'text',
+          session_id: sessionId,
+        }),
+      });
+
+      removeMessage(loadingId);
+
+      if (!res.ok) {
+        const errText = await res.text().catch(() => '');
+        throw new Error('API returned HTTP ' + res.status + (errText ? ': ' + errText.slice(0, 200) : ''));
+      }
+
+      const data = await res.json();
+      const reply = extractLangflowOutput(data);
+      appendAIMessage(reply);
+    } catch (err) {
+      removeMessage(loadingId);
+      appendErrorMessage(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function extractLangflowOutput(data) {
+    try {
+      // Standard Langflow response shape
+      const outputs = data?.outputs?.[0]?.outputs;
+      if (outputs) {
+        for (const o of outputs) {
+          const text = o?.results?.text?.data?.text
+            || o?.results?.message?.data?.text
+            || o?.artifacts?.message
+            || o?.outputs?.message?.message?.text;
+          if (text) return text;
+        }
+      }
+      // Fallback paths
+      return data?.output
+        || data?.text
+        || data?.message
+        || JSON.stringify(data, null, 2);
+    } catch {
+      return 'Received a response but could not parse it.';
+    }
+  }
+
+  /* ── MESSAGE RENDERING ──────────────────────────────────────── */
+  function appendUserMessage(text) {
+    const container = document.getElementById('chat-messages');
+    clearWelcome();
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const div = document.createElement('div');
+    div.className = 'msg user';
+    div.innerHTML = `
+      <div class="msg-bubble">${escapeHtml(text)}</div>
+      <div class="msg-meta">${time}</div>
+    `;
+    container.appendChild(div);
+    scrollBottom();
+  }
+
+  function appendAIMessage(text) {
+    const container = document.getElementById('chat-messages');
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const id = 'msg-' + Date.now();
+    const div = document.createElement('div');
+    div.className = 'msg ai';
+    div.id = id;
+    div.innerHTML = `
+      <div class="msg-bubble">${formatAIText(text)}</div>
+      <div class="msg-meta">
+        ${time}
+        <button class="btn btn-ghost btn-sm" onclick="copyMsg('${id}')">📋 Copy</button>
+      </div>
+    `;
+    container.appendChild(div);
+    scrollBottom();
+  }
+
+  function appendLoadingMessage() {
+    const container = document.getElementById('chat-messages');
+    const id = 'loading-' + Date.now();
+    const div = document.createElement('div');
+    div.className = 'msg ai loading-msg';
+    div.id = id;
+    div.innerHTML = `<div class="msg-bubble"><span class="spinner"></span> Reviewing your user story…</div>`;
+    container.appendChild(div);
+    scrollBottom();
+    return id;
+  }
+
+  function appendErrorMessage(errText) {
+    const container = document.getElementById('chat-messages');
+    const div = document.createElement('div');
+    div.className = 'msg ai';
+    div.innerHTML = `
+      <div class="alert alert-error" style="border-radius:14px;border-bottom-left-radius:4px">
+        ⚠ <strong>Error:</strong> ${escapeHtml(errText)}
+        <br><small style="opacity:.8">Check that Langflow is running at <code>localhost:7860</code> and that the CORS browser extension is active.</small>
+      </div>`;
+    container.appendChild(div);
+    scrollBottom();
+  }
+
+  function removeMessage(id) {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+  }
+
+  function clearWelcome() {
+    const w = document.querySelector('.welcome-msg');
+    if (w) w.remove();
+  }
+
+  function clearChat() {
+    const container = document.getElementById('chat-messages');
+    container.innerHTML = `
+      <div class="welcome-msg">
+        <div class="welcome-icon">👋</div>
+        <h3>Hello! I'm your User Story Review Agent.</h3>
+        <p>Paste or select a Jira User Story and I'll review it for clarity, completeness, and quality — so it's dev-ready before sprint planning.</p>
+      </div>`;
+  }
+
+  function scrollBottom() {
+    const c = document.getElementById('chat-messages');
+    c.scrollTop = c.scrollHeight;
+  }
+
+  function setLoading(v) {
+    isLoading = v;
+    document.getElementById('send-btn').disabled = v;
+    document.getElementById('send-btn').textContent = v ? '⏳ Reviewing…' : '✈ Send for Review';
+  }
+
+  /* ── COPY HELPERS ───────────────────────────────────────────── */
+  function copyMsg(msgId) {
+    const bubble = document.querySelector(`#${msgId} .msg-bubble`);
+    if (!bubble) return;
+    navigator.clipboard.writeText(bubble.innerText).then(() => {
+      const btn = document.querySelector(`#${msgId} .btn-ghost`);
+      if (btn) { btn.textContent = '✓ Copied'; setTimeout(() => btn.textContent = '📋 Copy', 1800); }
+    });
+  }
+
+  function copySample() {
+    const text = document.getElementById('sample-story-text').innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = event.target;
+      btn.textContent = '✓ Copied!';
+      setTimeout(() => btn.textContent = '📋 Copy Sample Story', 1800);
+    });
+  }
+
+  function pasteSampleToChat() {
+    const text = document.getElementById('sample-story-text').innerText;
+    if (!chatOpen) toggleChat();
+    document.getElementById('chat-input').value = text;
+    updateCharCount();
+    setTimeout(sendMessage, 100);
+  }
+
+  /* ── UTILS ──────────────────────────────────────────────────── */
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function formatAIText(text) {
+    // Simple markdown-lite: bold, code, line breaks
+    return escapeHtml(text)
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/`(.+?)`/g, '<code style="background:#f0f0f0;padding:1px 5px;border-radius:3px;font-size:12px">$1</code>')
+      .replace(/\n/g, '<br>');
+  }
+</script>
+</body>
+</html>

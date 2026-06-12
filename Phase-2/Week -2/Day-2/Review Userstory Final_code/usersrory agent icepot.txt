@@ -1,0 +1,90 @@
+I - INSTRUCTION
+I want to create a simple HTML page that can be used as a User Story Review Agent.
+The page should connect directly to my Langflow API and allow users to submit a Jira User Story for review.
+The userstory list for selection should be fetched from the linked jira account
+Please generate a complete HTML page with CSS and JavaScript included in the same file.
+Do not use the Langflow Embedded Chat component.
+Create a custom chat interface that communicates directly with the Langflow API.
+use the langflow API key and URL data from the userstory review Agent json
+
+
+C - CONTEXT
+I am not building a full application.
+I only need a standalone HTML page that can be opened in a browser.
+This page will be used by Business Analysts, Product Owners, QA Engineers, and Developers to review Jira User Stories before they are sent for development.
+I already have a Langflow flow running locally.
+The HTML page should send the user story to the Langflow API and display the review results inside the chat window.
+Example API:
+import requests
+import uuid
+
+api_key = "YOUR_API_KEY"
+
+url = "http://localhost:7860/api/v1/run/d7878473-4617-4c3d-87f8-ca134c160907"
+
+payload = {
+    "output_type": "text",
+    "input_type": "text",
+    "input_value": "hello world!",
+}
+
+headers = {
+    "x-api-key": api_key
+}
+The page should use JavaScript fetch() to call this API.
+
+E - EXPECTATIONS
+I would like the page to have a professional and easy-to-use design.
+The chat interface should appear on the top-right side of the page.
+Users should be able to:
+Open the review agent
+Close the review agent
+Submit a user story
+View review results
+Copy review results
+Clear chat history
+The page should automatically generate a session ID when loaded.
+When the AI is reviewing a user story, show a loading message and spinner.
+Display proper error messages if the API is unavailable or returns an invalid response.
+Add a "How to Use" section explaining how a user can paste a Jira User Story and get a review.
+Add a "Sample Fund Transfer User Story" section with:
+As a customer,
+I want to transfer funds between my accounts,
+So that I can manage my finances without visiting a branch.
+Acceptance Criteria:
+User can select source account
+User can select destination account
+User can enter transfer amount
+Amount must be greater than zero
+Confirmation message should be displayed
+Transaction should be saved successfully
+Provide buttons to:
+Copy Sample User Story
+Paste Sample User Story into Chat
+Every AI response should have a Copy button.
+Include a Clear Chat button.
+Use modern styling with cards, shadows, rounded corners, and responsive design.
+
+P - PERSONA
+Act as a Senior Frontend Engineer who has experience building enterprise AI chat interfaces and integrating Langflow APIs.
+Design the page so that even non-technical business users can easily use it.
+
+O - OUTPUT
+Generate:
+Complete HTML
+Inline CSS
+Inline JavaScript
+Production-ready code
+Fully working Langflow API integration
+Do not provide explanations.
+Generate only the final HTML code.
+
+T - TONE
+Professional
+Clean
+Modern
+Enterprise-friendly
+Easy to understand
+Suitable for Business Analysts and QA Teams reviewing Jira User Stories.
+
+https://allurisindhu503.atlassian.net/rest/api/3/search/jql
