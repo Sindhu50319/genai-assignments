@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Testcase Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e3f2fd 0%, #f5f5f5 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+            height: calc(100vh - 40px);
+        }
+
+        /* Header */
+        .header {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* Main Content */
+        .content-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+            grid-column: 1 / -1;
+        }
+
+        .main-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Instructions Section */
+        .instructions-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border-left: 4px solid #1976d2;
+        }
+
+        .instructions-section h2 {
+            color: #1976d2;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .instructions-section ol {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+
+        .instructions-section li {
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        .instructions-section strong {
+            color: #1976d2;
+        }
+
+        /* Sample Stories Section */
+        .sample-stories-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border-left: 4px solid #0097a7;
+        }
+
+        .sample-stories-section h2 {
+            color: #0097a7;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .stories-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        .stories-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .stories-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .stories-list::-webkit-scrollbar-thumb {
+            background: #1976d2;
+            border-radius: 3px;
+        }
+
+        .story-item {
+            background: #f5f5f5;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            line-height: 1.6;
+            border-left: 3px solid #0097a7;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .story-item:hover {
+            background: #e1f5fe;
+            transform: translateX(5px);
+        }
+
+        .copy-story-btn {
+            background: #0097a7;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .copy-story-btn:hover {
+            background: #00838f;
+            transform: scale(1.05);
+        }
+
+        /* Chat Display Section */
+        .chat-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border-top: 4px solid #1976d2;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-section h2 {
+            color: #1976d2;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .chat-display {
+            flex-grow: 1;
+            background: #fafafa;
+            border-radius: 8px;
+            padding: 15px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            border: 1px solid #e0e0e0;
+            min-height: 300px;
+            max-height: 500px;
+        }
+
+        .chat-display::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-display::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .chat-display::-webkit-scrollbar-thumb {
+            background: #1976d2;
+            border-radius: 4px;
+        }
+
+        .chat-display::-webkit-scrollbar-thumb:hover {
+            background: #1565c0;
+        }
+
+        .message {
+            margin-bottom: 12px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            text-align: right;
+        }
+
+        .message.bot {
+            text-align: left;
+        }
+
+        .message-content {
+            display: inline-block;
+            max-width: 80%;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .user .message-content {
+            background: #1976d2;
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+
+        .bot .message-content {
+            background: #e3f2fd;
+            color: #333;
+            border-bottom-left-radius: 2px;
+        }
+
+        .empty-chat {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .empty-chat-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+            opacity: 0.5;
+        }
+
+        /* Control Buttons */
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: #1976d2;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1565c0;
+            box-shadow: 0 4px 8px rgba(25, 118, 210, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+            border: 1px solid #e0e0e0;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-danger {
+            background: #d32f2f;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c62828;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Sidebar - Langflow Chat */
+        .sidebar {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            height: fit-content;
+            border-top: 4px solid #0097a7;
+        }
+
+        .sidebar h3 {
+            color: #0097a7;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .langflow-container {
+            width: 100%;
+            height: 500px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #fafafa;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .lf-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .lf-messages::-webkit-scrollbar { width: 6px; }
+        .lf-messages::-webkit-scrollbar-track { background: #f1f1f1; }
+        .lf-messages::-webkit-scrollbar-thumb { background: #0097a7; border-radius: 3px; }
+
+        .lf-msg {
+            display: flex;
+            animation: slideIn 0.3s ease;
+        }
+        .lf-msg.user { justify-content: flex-end; }
+        .lf-msg.bot { justify-content: flex-start; }
+
+        .lf-msg-content {
+            max-width: 85%;
+            padding: 9px 13px;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.5;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+        .lf-msg.user .lf-msg-content {
+            background: #0097a7;
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+        .lf-msg.bot .lf-msg-content {
+            background: #e0f7fa;
+            color: #333;
+            border: 1px solid #b2ebf2;
+            border-bottom-left-radius: 2px;
+        }
+
+        .lf-typing { display: flex; gap: 4px; align-items: center; padding: 4px 0; }
+        .lf-dot { width: 7px; height: 7px; border-radius: 50%; background: #0097a7; animation: bounce 1.4s infinite; }
+        .lf-dot:nth-child(2) { animation-delay: 0.2s; }
+        .lf-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-8px)} }
+
+        .lf-empty {
+            display: flex; align-items: center; justify-content: center;
+            height: 100%; color: #999; text-align: center; font-size: 13px; padding: 20px;
+        }
+
+        .lf-input-area {
+            padding: 10px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 8px;
+        }
+
+        .lf-input {
+            flex: 1;
+            padding: 9px 11px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+            resize: none;
+            max-height: 70px;
+        }
+        .lf-input:focus { outline: none; border-color: #0097a7; }
+
+        .lf-send-btn {
+            padding: 9px 14px;
+            background: #0097a7;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            flex-shrink: 0;
+            transition: background 0.2s;
+        }
+        .lf-send-btn:hover { background: #00838f; }
+        .lf-send-btn:disabled { background: #ccc; cursor: not-allowed; }
+
+        /* Notification Toast */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #4caf50;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            animation: slideInUp 0.3s ease;
+            z-index: 1000;
+        }
+
+        @keyframes slideInUp {
+            from {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .toast.error {
+            background: #f44336;
+        }
+
+        .toast.success {
+            background: #4caf50;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .content-wrapper {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                order: -1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .container {
+                padding: 10px;
+            }
+
+            .chat-display {
+                min-height: 200px;
+                max-height: 300px;
+            }
+
+            .message-content {
+                max-width: 90%;
+            }
+        }
+
+        /* Focus and Accessibility */
+        .btn:focus,
+        button:focus {
+            outline: 2px solid #1976d2;
+            outline-offset: 2px;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: 2px solid #1976d2;
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🤖 AI-Powered Testcase Generator</h1>
+            <p>Leverage AI to generate comprehensive test cases from user stories and requirements</p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content-wrapper">
+            <div class="main-panel">
+                <!-- Instructions Section -->
+                <div class="instructions-section">
+                    <h2>📋 How to Use This Testcase Generator</h2>
+                    <ol>
+                        <li><strong>Select a Sample Story:</strong> Click on any sample user story from the "Sample Banking Stories" section below or paste your own user story.</li>
+                        <li><strong>Copy the Story:</strong> Use the copy button to add the story to your clipboard for easy sharing.</li>
+                        <li><strong>Open Langflow Chat:</strong> Click the chat icon in the top-right sidebar to open the AI chat assistant.</li>
+                        <li><strong>Generate Test Cases:</strong> Paste your user story into the Langflow chat and ask for test case generation.</li>
+                        <li><strong>Review Output:</strong> The AI will generate comprehensive test cases that appear in the chat window.</li>
+                        <li><strong>Copy Results:</strong> Use the "Copy Chat Output" button to copy all generated test cases.</li>
+                        <li><strong>Clear History:</strong> Click "Clear Chat" to reset and start a new test case generation session.</li>
+                    </ol>
+                </div>
+
+                <!-- Sample Stories Section -->
+                <div class="sample-stories-section">
+                    <h2>🏦 Sample Banking Domain User Stories</h2>
+                    <div class="stories-list" id="storiesList">
+                        <div class="story-item" data-story="As a customer, I want to transfer funds between my accounts so that I can manage my money efficiently.">
+                            <strong>Story 1:</strong> As a customer, I want to transfer funds between my accounts so that I can manage my money efficiently.
+                        </div>
+                        <div class="story-item" data-story="As a customer, I want to view my transaction history for the last 90 days so that I can track my spending.">
+                            <strong>Story 2:</strong> As a customer, I want to view my transaction history for the last 90 days so that I can track my spending.
+                        </div>
+                        <div class="story-item" data-story="As a customer, I want to set up a savings goal with automatic transfers so that I can save money without effort.">
+                            <strong>Story 3:</strong> As a customer, I want to set up a savings goal with automatic transfers so that I can save money without effort.
+                        </div>
+                        <div class="story-item" data-story="As a customer, I want to receive notifications for large transactions over $500 so that I can monitor my account security.">
+                            <strong>Story 4:</strong> As a customer, I want to receive notifications for large transactions over $500 so that I can monitor my account security.
+                        </div>
+                        <div class="story-item" data-story="As a bank administrator, I want to view all customer transactions for audit purposes so that I can ensure compliance.">
+                            <strong>Story 5:</strong> As a bank administrator, I want to view all customer transactions for audit purposes so that I can ensure compliance.
+                        </div>
+                    </div>
+                    <button class="copy-story-btn" onclick="copySelectedStory()">📋 Copy Selected Story</button>
+                </div>
+
+                <!-- Chat Display Section -->
+                <div class="chat-section">
+                    <h2>💬 Test Case Generation Output</h2>
+                    <div class="chat-display" id="chatDisplay">
+                        <div class="empty-chat">
+                            <div>
+                                <div class="empty-chat-icon">💬</div>
+                                <div>Chat output will appear here after using Langflow chat</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control-buttons">
+                        <button class="btn btn-secondary" onclick="copyAllOutput()">📋 Copy Output</button>
+                        <button class="btn btn-danger" onclick="clearChat()">🗑️ Clear Chat</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar - Langflow Chat Widget -->
+            <div class="sidebar">
+                <h3>🚀 AI Chat Assistant</h3>
+                <div class="langflow-container" id="langflowContainer">
+                    <div class="lf-messages" id="lfMessages">
+                        <div class="lf-empty" id="lfEmpty">
+                            <div>
+                                <div style="font-size:36px;opacity:0.4;margin-bottom:8px">💬</div>
+                                <div>Type a message to start generating test cases</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="lf-input-area">
+                        <textarea class="lf-input" id="lfInput" rows="2" placeholder="Paste user story and ask for test cases... (Ctrl+Enter to send)"></textarea>
+                        <button class="lf-send-btn" id="lfSendBtn" title="Send (Ctrl+Enter)">📤</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Langflow Chat - Direct API Implementation -->
+    <script>
+        const LANGFLOW_CONFIG = {
+            api_url: "http://localhost:7860/api/v1/run/062c9e0a-f710-43d5-98bf-c4fd17ec7f45",
+            api_key: "sk-BdQYIqxFnoQ-NZ_O4DInA9dphXFs5tNhLHG8C2FEncA",
+            timeout: 30000
+        };
+
+        function generateSessionId() {
+            return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        const lfState = {
+            sessionId: generateSessionId(),
+            isLoading: false,
+            messages: []
+        };
+
+        function lfAddMessage(content, isUser) {
+            lfState.messages.push({ content, isUser });
+
+            const empty = document.getElementById('lfEmpty');
+            if (empty) empty.remove();
+
+            const wrap = document.createElement('div');
+            wrap.className = 'lf-msg ' + (isUser ? 'user' : 'bot');
+            const bubble = document.createElement('div');
+            bubble.className = 'lf-msg-content';
+            bubble.textContent = content;
+            wrap.appendChild(bubble);
+            document.getElementById('lfMessages').appendChild(wrap);
+            document.getElementById('lfMessages').scrollTop = 99999;
+
+            // Mirror to main chat display
+            syncChatDisplay();
+        }
+
+        function lfShowTyping() {
+            const wrap = document.createElement('div');
+            wrap.className = 'lf-msg bot';
+            wrap.id = 'lfTyping';
+            wrap.innerHTML = '<div class="lf-msg-content"><div class="lf-typing"><div class="lf-dot"></div><div class="lf-dot"></div><div class="lf-dot"></div></div></div>';
+            document.getElementById('lfMessages').appendChild(wrap);
+            document.getElementById('lfMessages').scrollTop = 99999;
+        }
+
+        function lfRemoveTyping() {
+            const t = document.getElementById('lfTyping');
+            if (t) t.remove();
+        }
+
+        function syncChatDisplay() {
+            const display = document.getElementById('chatDisplay');
+            if (!display) return;
+            if (lfState.messages.length === 0) return;
+            display.innerHTML = lfState.messages.map(m => {
+                const cls = m.isUser ? 'user' : 'bot';
+                const prefix = m.isUser ? '' : '';
+                return `<div class="message ${cls}"><div class="message-content">${escapeHtml(m.content)}</div></div>`;
+            }).join('');
+            display.scrollTop = 99999;
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+        }
+
+        async function lfSend() {
+            const input = document.getElementById('lfInput');
+            const sendBtn = document.getElementById('lfSendBtn');
+            const text = input.value.trim();
+            if (!text || lfState.isLoading) return;
+
+            lfAddMessage(text, true);
+            input.value = '';
+            input.style.height = 'auto';
+            lfState.isLoading = true;
+            sendBtn.disabled = true;
+            lfShowTyping();
+
+            try {
+                const controller = new AbortController();
+                const timer = setTimeout(() => controller.abort(), LANGFLOW_CONFIG.timeout);
+
+                const response = await fetch(LANGFLOW_CONFIG.api_url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${LANGFLOW_CONFIG.api_key}`,
+                        'x-api-key': LANGFLOW_CONFIG.api_key
+                    },
+                    body: JSON.stringify({
+                        input_value: text,
+                        input_type: 'chat',
+                        output_type: 'chat',
+                        session_id: lfState.sessionId
+                    }),
+                    signal: controller.signal
+                });
+
+                clearTimeout(timer);
+                lfRemoveTyping();
+
+                if (!response.ok) {
+                    const err = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${err}`);
+                }
+
+                const data = await response.json();
+                const reply = data?.outputs?.[0]?.outputs?.[0]?.results?.message?.data?.text
+                    || data?.outputs?.[0]?.outputs?.[0]?.messages?.[0]?.message
+                    || data?.message
+                    || 'Response received.';
+                lfAddMessage(reply, false);
+
+            } catch (err) {
+                lfRemoveTyping();
+                if (err.name === 'AbortError') {
+                    lfAddMessage('⏱️ Request timed out. Make sure Langflow is running at localhost:7860.', false);
+                } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+                    lfAddMessage('❌ Cannot reach Langflow. Make sure it is running at http://localhost:7860', false);
+                } else {
+                    lfAddMessage('❌ Error: ' + err.message, false);
+                }
+            } finally {
+                lfState.isLoading = false;
+                sendBtn.disabled = false;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            document.getElementById('lfSendBtn').addEventListener('click', lfSend);
+            document.getElementById('lfInput').addEventListener('keydown', function (e) {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    lfSend();
+                }
+            });
+            document.getElementById('lfInput').addEventListener('input', function () {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 70) + 'px';
+            });
+        });
+    </script>
+
+    <!-- Application Logic -->
+    <script>
+        let selectedStory = "";
+        let chatHistory = [];
+
+        // Story Selection
+        document.querySelectorAll('.story-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.story-item').forEach(i => i.style.background = '#f5f5f5');
+                this.style.background = '#e1f5fe';
+                selectedStory = this.getAttribute('data-story');
+            });
+        });
+
+        // Copy Selected Story
+        function copySelectedStory() {
+            if (!selectedStory) {
+                showToast('Please select a story first', 'error');
+                return;
+            }
+            navigator.clipboard.writeText(selectedStory).then(() => {
+                showToast('Story copied to clipboard!', 'success');
+            }).catch(() => {
+                showToast('Failed to copy story', 'error');
+            });
+        }
+
+        // Copy All Chat Output
+        function copyAllOutput() {
+            const chatContent = document.getElementById('chatDisplay');
+            const messages = chatContent.innerText;
+            
+            if (messages === '💬\nChat output will appear here after using Langflow chat') {
+                showToast('No output to copy yet', 'error');
+                return;
+            }
+
+            navigator.clipboard.writeText(messages).then(() => {
+                showToast('Chat output copied to clipboard!', 'success');
+            }).catch(() => {
+                showToast('Failed to copy output', 'error');
+            });
+        }
+
+        // Clear Chat
+        function clearChat() {
+            if (confirm('Are you sure you want to clear the chat? This action cannot be undone.')) {
+                document.getElementById('chatDisplay').innerHTML = `
+                    <div class="empty-chat">
+                        <div>
+                            <div class="empty-chat-icon">💬</div>
+                            <div>Chat output will appear here after using Langflow chat</div>
+                        </div>
+                    </div>
+                `;
+                chatHistory = [];
+
+                // Also reset sidebar chat
+                if (typeof lfState !== 'undefined') {
+                    lfState.messages = [];
+                    lfState.sessionId = generateSessionId();
+                    document.getElementById('lfMessages').innerHTML = `
+                        <div class="lf-empty" id="lfEmpty">
+                            <div>
+                                <div style="font-size:36px;opacity:0.4;margin-bottom:8px">💬</div>
+                                <div>Type a message to start generating test cases</div>
+                            </div>
+                        </div>`;
+                }
+                showToast('Chat cleared successfully', 'success');
+            }
+        }
+
+        // Show Toast Notification
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideInUp 0.3s ease reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Select first story by default
+            const firstStory = document.querySelector('.story-item');
+            if (firstStory) {
+                firstStory.click();
+            }
+
+            // Add demo message for testing
+            setTimeout(() => {
+                const chatDisplay = document.getElementById('chatDisplay');
+                const emptyState = chatDisplay.querySelector('.empty-chat');
+                if (emptyState) {
+                    // Keep empty state until Langflow is connected
+                    console.log('Ready for Langflow integration');
+                }
+            }, 500);
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl/Cmd + Shift + C = Copy output
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'C') {
+                e.preventDefault();
+                copyAllOutput();
+            }
+            // Ctrl/Cmd + Shift + L = Clear chat
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'L') {
+                e.preventDefault();
+                clearChat();
+            }
+        });
+    </script>
+</body>
+</html>

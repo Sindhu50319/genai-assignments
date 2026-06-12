@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Testcase Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e3f2fd 0%, #f5f5f5 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .header code {
+            font-family: 'Monaco', 'Courier New', monospace;
+        }
+
+        /* Chat Toggle Button */
+        .chat-toggle-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #1976d2;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(25, 118, 210, 0.4);
+            transition: all 0.3s ease;
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chat-toggle-btn:hover {
+            background: #1565c0;
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(25, 118, 210, 0.5);
+        }
+
+        .chat-toggle-btn:active {
+            transform: scale(0.95);
+        }
+
+        .chat-toggle-btn.active {
+            background: #d32f2f;
+        }
+
+        .chat-toggle-btn::after {
+            content: attr(data-state);
+            position: absolute;
+            bottom: -25px;
+            background: #333;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .chat-toggle-btn:hover::after {
+            opacity: 1;
+        }
+
+        /* Chat Container */
+        .chat-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            width: 380px;
+            height: 600px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            z-index: 998;
+            transition: all 0.3s ease;
+            transform: translateX(420px);
+        }
+
+        .chat-container.open {
+            transform: translateX(0);
+        }
+
+        /* Chat Header */
+        .chat-header {
+            background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+            color: white;
+            padding: 16px;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #0d47a1;
+        }
+
+        .chat-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chat-header-icon {
+            font-size: 20px;
+        }
+
+        .chat-close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            transition: transform 0.2s ease;
+        }
+
+        .chat-close-btn:hover {
+            transform: rotate(90deg);
+        }
+
+        /* Chat Messages Area */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            background: #fafafa;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #1976d2;
+            border-radius: 3px;
+        }
+
+        .message {
+            display: flex;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.bot {
+            justify-content: flex-start;
+        }
+
+        .message-content {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .user .message-content {
+            background: #1976d2;
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+
+        .bot .message-content {
+            background: #e3f2fd;
+            color: #333;
+            border-bottom-left-radius: 2px;
+            border: 1px solid #bbdefb;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #1976d2;
+            animation: bounce 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        .empty-chat-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #999;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .empty-chat-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        .empty-chat-state p {
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        /* Chat Input Area */
+        .chat-input-area {
+            padding: 16px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 8px;
+            flex-direction: column;
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 8px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+            resize: none;
+            max-height: 80px;
+            transition: border-color 0.3s ease;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #1976d2;
+            box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+        }
+
+        .chat-input::placeholder {
+            color: #999;
+        }
+
+        .send-btn {
+            padding: 10px 14px;
+            background: #1976d2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .send-btn:hover {
+            background: #1565c0;
+        }
+
+        .send-btn:active {
+            transform: scale(0.95);
+        }
+
+        .send-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .chat-action-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: space-between;
+        }
+
+        .chat-action-btn {
+            flex: 1;
+            padding: 8px 12px;
+            background: #f5f5f5;
+            color: #333;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .chat-action-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .chat-action-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Main Content */
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* Instructions Section */
+        .instructions-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border-left: 4px solid #1976d2;
+        }
+
+        .instructions-section h2 {
+            color: #1976d2;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .instructions-section ol {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+
+        .instructions-section li {
+            margin-bottom: 10px;
+            color: #555;
+            font-size: 13px;
+        }
+
+        .instructions-section strong {
+            color: #1976d2;
+        }
+
+        /* Sample Stories Section */
+        .sample-stories-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border-left: 4px solid #0097a7;
+        }
+
+        .sample-stories-section h2 {
+            color: #0097a7;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .stories-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        .stories-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .stories-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .stories-list::-webkit-scrollbar-thumb {
+            background: #0097a7;
+            border-radius: 3px;
+        }
+
+        .story-item {
+            background: #f5f5f5;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            line-height: 1.6;
+            border-left: 3px solid #0097a7;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .story-item:hover {
+            background: #e1f5fe;
+            transform: translateX(5px);
+        }
+
+        .story-item.selected {
+            background: #0097a7;
+            color: white;
+        }
+
+        .copy-story-btn {
+            background: #0097a7;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .copy-story-btn:hover {
+            background: #00838f;
+            transform: scale(1.02);
+        }
+
+        /* Chat Output Section */
+        .chat-output-section {
+            grid-column: 1 / -1;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border-top: 4px solid #1976d2;
+        }
+
+        .chat-output-section h2 {
+            color: #1976d2;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .output-display {
+            background: #fafafa;
+            border-radius: 8px;
+            padding: 15px;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            margin-bottom: 15px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #333;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .output-display::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .output-display::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .output-display::-webkit-scrollbar-thumb {
+            background: #1976d2;
+            border-radius: 4px;
+        }
+
+        .empty-output {
+            color: #999;
+            font-style: italic;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #4caf50;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            animation: slideInUp 0.3s ease;
+            z-index: 1001;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        @keyframes slideInUp {
+            from {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .toast.error {
+            background: #f44336;
+        }
+
+        .toast.warning {
+            background: #ff9800;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            .chat-container {
+                width: 320px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .chat-container {
+                width: 280px;
+                height: 500px;
+                top: 60px;
+            }
+
+            .chat-toggle-btn {
+                top: 10px;
+                right: 10px;
+                width: 44px;
+                height: 44px;
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <h1>🤖 AI-Powered Testcase Generator</h1>
+        <p>Leverage AI to generate comprehensive test cases from user stories and requirements</p>
+        <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.2); font-size: 12px; opacity: 0.9;">
+            <strong>🔌 Langflow Connection:</strong> Ensure Langflow is running at <code style="background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 3px;">http://localhost:7860</code>
+            <br><strong>📋 Flow ID:</strong> <code style="background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 3px;">062c9e0a-f710-43d5-98bf-c4fd17ec7f45</code>
+            <br><strong>💡 Tip:</strong> Open browser DevTools (F12) → Console to see detailed error messages and debugging info
+        </div>
+    </div>
+
+    <!-- Chat Toggle Button -->
+    <button class="chat-toggle-btn" id="chatToggleBtn" data-state="Open Chat" title="Toggle AI Chat Assistant">
+        💬
+    </button>
+
+    <!-- Chat Container -->
+    <div class="chat-container" id="chatContainer">
+        <!-- Chat Header -->
+        <div class="chat-header">
+            <h3>
+                <span class="chat-header-icon">🚀</span>
+                AI Chat Assistant
+            </h3>
+            <button class="chat-close-btn" id="chatCloseBtn" title="Close Chat">
+                ✕
+            </button>
+        </div>
+
+        <!-- Chat Messages -->
+        <div class="chat-messages" id="chatMessages">
+            <div class="empty-chat-state">
+                <div class="empty-chat-icon">💬</div>
+                <p><strong>Welcome to Test Case Generator!</strong></p>
+                <p style="margin-top: 8px;">1. Select a sample story or paste your own<br>2. Type your message below<br>3. Click Send to generate test cases</p>
+            </div>
+        </div>
+
+        <!-- Chat Input Area -->
+        <div class="chat-input-area">
+            <div class="chat-input-wrapper">
+                <textarea class="chat-input" id="chatInput" placeholder="Paste your user story and ask for test cases..." rows="2"></textarea>
+                <button class="send-btn" id="sendBtn" title="Send Message (Ctrl+Enter)">📤</button>
+            </div>
+            <div class="chat-action-buttons">
+                <button class="chat-action-btn" id="copyOutputBtn" title="Copy all messages">📋 Copy</button>
+                <button class="chat-action-btn" id="clearChatBtn" title="Clear all messages">🗑️ Clear</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+        <!-- Instructions Section -->
+        <div class="instructions-section">
+            <h2>📋 How to Use This Testcase Generator</h2>
+            <ol>
+                <li><strong>Open Chat:</strong> Click the chat button (💬) in the top-right corner</li>
+                <li><strong>Select Story:</strong> Choose a sample story below or paste your own</li>
+                <li><strong>Copy to Chat:</strong> Use the copy button to add the story to clipboard</li>
+                <li><strong>Paste & Ask:</strong> Paste the story in the chat and ask for test cases</li>
+                <li><strong>Generate:</strong> Wait for AI to generate comprehensive test cases</li>
+                <li><strong>Copy Results:</strong> Use the "Copy" button to copy all chat outputs</li>
+                <li><strong>Clear:</strong> Click "Clear" to reset the chat for a new session</li>
+            </ol>
+        </div>
+
+        <!-- Sample Stories Section -->
+        <div class="sample-stories-section">
+            <h2>🏦 Sample User Stories</h2>
+            <div class="stories-list" id="storiesList">
+                <div class="story-item" data-story="As a customer, I want to transfer funds between my accounts so that I can manage my money efficiently. The system should validate sufficient balance, verify account ownership, and complete the transfer within seconds. Accept transfers between any of my own accounts, show real-time balance updates, and provide transaction confirmation.">
+                    <strong>Story 1:</strong> Fund Transfer Between Accounts
+                </div>
+                <div class="story-item" data-story="As a customer, I want to view my transaction history for the last 90 days so that I can track my spending. Filter by date range, transaction type, and amount. Show transaction details including timestamp, description, amount, and running balance.">
+                    <strong>Story 2:</strong> View Transaction History
+                </div>
+                <div class="story-item" data-story="As a customer, I want to set up a recurring transfer so that I can automate my bill payments. Configure frequency (weekly, bi-weekly, monthly), amount, recipient, and start/end dates. Receive notifications for each transfer.">
+                    <strong>Story 3:</strong> Recurring Transfers
+                </div>
+                <div class="story-item" data-story="As a customer, I want to receive alerts for large transactions over a set amount so that I can monitor my account security. Set alert threshold, configure notification method (email, SMS, app), and view alert history.">
+                    <strong>Story 4:</strong> Transaction Alerts
+                </div>
+                <div class="story-item" data-story="As a bank admin, I want to view all customer transactions for audit purposes so that I can ensure compliance. Filter by customer, date range, transaction type, and amount. Generate audit reports with full transaction details.">
+                    <strong>Story 5:</strong> Admin Audit Trail
+                </div>
+            </div>
+            <button class="copy-story-btn" id="copyStoryBtn">📋 Copy Selected Story</button>
+        </div>
+
+        <!-- Chat Output Section -->
+        <div class="chat-output-section">
+            <h2>💬 Test Case Generation Output</h2>
+            <div class="output-display" id="outputDisplay">
+                <div class="empty-output">Chat output will appear here (or open the chat panel on the right)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // ============================================
+        // UTILITY FUNCTIONS (MUST BE FIRST)
+        // ============================================
+        function generateSessionId() {
+            return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // ============================================
+        // CONFIGURATION & STATE
+        // ============================================
+        const LANGFLOW_CONFIG = {
+            api_url: "http://localhost:7860/api/v1/run/062c9e0a-f710-43d5-98bf-c4fd17ec7f45",
+            api_key: "sk-BdQYIqxFnoQ-NZ_O4DInA9dphXFs5tNhLHG8C2FEncA", // Your Langflow API Key
+            //stream: false,
+            timeout: 30000,
+            skipAuthCheck: false
+        };
+
+        let chatState = {
+            sessionId: generateSessionId(),
+            isOpen: false,
+            isLoading: false,
+            messages: [],
+            selectedStory: null,
+            retryCount: 0,
+            maxRetries: 2
+        };
+
+        // ============================================
+        // DOM ELEMENTS
+        // ============================================
+        const chatToggleBtn = document.getElementById('chatToggleBtn');
+        const chatCloseBtn = document.getElementById('chatCloseBtn');
+        const chatContainer = document.getElementById('chatContainer');
+        const chatMessages = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const copyOutputBtn = document.getElementById('copyOutputBtn');
+        const clearChatBtn = document.getElementById('clearChatBtn');
+        const copyStoryBtn = document.getElementById('copyStoryBtn');
+        const storiesList = document.getElementById('storiesList');
+        const outputDisplay = document.getElementById('outputDisplay');
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideInUp 0.3s ease reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // ============================================
+        // CHAT INTERFACE FUNCTIONS
+        // ============================================
+        function toggleChat() {
+            chatState.isOpen = !chatState.isOpen;
+            chatContainer.classList.toggle('open', chatState.isOpen);
+            chatToggleBtn.classList.toggle('active', chatState.isOpen);
+            chatToggleBtn.setAttribute('data-state', chatState.isOpen ? 'Close Chat' : 'Open Chat');
+        }
+
+        function closeChat() {
+            chatState.isOpen = false;
+            chatContainer.classList.remove('open');
+            chatToggleBtn.classList.remove('active');
+            chatToggleBtn.setAttribute('data-state', 'Open Chat');
+        }
+
+        function clearChat() {
+            if (confirm('Clear all messages? This action cannot be undone.')) {
+                chatState.messages = [];
+                chatState.sessionId = generateSessionId();
+                chatMessages.innerHTML = `
+                    <div class="empty-chat-state">
+                        <div class="empty-chat-icon">💬</div>
+                        <p><strong>Chat Cleared!</strong></p>
+                        <p style="margin-top: 8px;">Ready for a new session</p>
+                    </div>
+                `;
+                outputDisplay.innerHTML = '<div class="empty-output">Chat output will appear here (or open the chat panel on the right)</div>';
+                showToast('Chat cleared successfully');
+            }
+        }
+
+        function addMessage(content, isUser = false) {
+            const message = {
+                content: content,
+                isUser: isUser,
+                timestamp: new Date()
+            };
+            chatState.messages.push(message);
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.textContent = content;
+
+            messageDiv.appendChild(contentDiv);
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            updateOutputDisplay();
+        }
+
+        function showTypingIndicator() {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot';
+            messageDiv.id = 'typingIndicator';
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.innerHTML = '<div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
+
+            messageDiv.appendChild(contentDiv);
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        function updateOutputDisplay() {
+            if (chatState.messages.length === 0) {
+                outputDisplay.innerHTML = '<div class="empty-output">Chat output will appear here (or open the chat panel on the right)</div>';
+            } else {
+                const output = chatState.messages.map(msg => {
+                    const prefix = msg.isUser ? '👤 You: ' : '🤖 AI: ';
+                    return prefix + msg.content;
+                }).join('\n\n');
+                outputDisplay.textContent = output;
+            }
+        }
+
+        // ============================================
+        // API COMMUNICATION
+        // ============================================
+        async function sendMessage() {
+            const userInput = chatInput.value.trim();
+
+            if (!userInput) {
+                showToast('Please enter a message', 'warning');
+                return;
+            }
+
+            if (chatState.isLoading) {
+                showToast('Waiting for previous response...', 'warning');
+                return;
+            }
+
+            // Add user message to chat
+            addMessage(userInput, true);
+            chatInput.value = '';
+            chatInput.style.height = 'auto';
+
+            // Show typing indicator
+            chatState.isLoading = true;
+            chatState.retryCount = 0;
+            sendBtn.disabled = true;
+            showTypingIndicator();
+
+            await sendMessageWithRetry(userInput);
+        }
+
+        async function sendMessageWithRetry(userInput) {
+            try {
+                const requestPayload = {
+                    
+                    "output_type": "chat",
+                    "input_type": "chat",
+                    "input_value": userInput,
+                    "session_id": chatState.sessionId
+                };
+
+                console.log('📤 Sending request to:', LANGFLOW_CONFIG.api_url);
+                console.log('📦 Payload:', requestPayload);
+
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), LANGFLOW_CONFIG.timeout);
+
+                const headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${LANGFLOW_CONFIG.api_key}`,
+                    "x-api-key": `${LANGFLOW_CONFIG.api_key}`
+                };
+
+                // Build URL - NO auth bypass parameters
+                let apiUrl = LANGFLOW_CONFIG.api_url;
+                if (LANGFLOW_CONFIG.stream !== undefined) {
+                    apiUrl += `?stream=${LANGFLOW_CONFIG.stream}`;
+                }
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(requestPayload),
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+
+                console.log('📊 Response Status:', response.status, response.statusText);
+
+                if (!response.ok) {
+                    const errorData = await response.text();
+                    console.error('❌ Response Error:', response.status, response.statusText, errorData);
+                    throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                console.log('✅ Response type:', typeof data);
+
+                removeTypingIndicator();
+                console.log('✅ Success Response:', data);
+                const botResponse = data.outputs[0].outputs[0].results.message.data.text;
+
+                if (data.outputs && botResponse) {
+                    
+                    addMessage(botResponse, false);
+                } else if (data.message) {
+                    addMessage(data.message, false);
+                } else {
+                    console.warn('⚠️ Unexpected response format:', data);
+                    addMessage('Test case generated successfully!', false);
+                }
+
+                chatState.isLoading = false;
+                sendBtn.disabled = false;
+
+            } catch (error) {
+                console.error('❌ Error sending message:', error.message);
+                removeTypingIndicator();
+                
+                if (error.name === 'AbortError') {
+                    addMessage('⏱️ Request timeout - Langflow took too long to respond', false);
+                } else if (error.message.includes('403')) {
+                    addMessage('❌ Access Forbidden (403) - Check API key and flow permissions', false);
+                } else if (error.message.includes('401')) {
+                    addMessage('❌ Unauthorized (401) - Invalid API key', false);
+                } else if (error.message.includes('404')) {
+                    addMessage('❌ Not Found (404) - Invalid flow ID', false);
+                } else {
+                    addMessage(`❌ Error: ${error.message}`, false);
+                }
+                
+                chatState.isLoading = false;
+                sendBtn.disabled = false;
+            }
+        }
+
+        // ============================================
+        // STORY SELECTION
+        // ============================================
+        function selectStory(storyElement) {
+            document.querySelectorAll('.story-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            storyElement.classList.add('selected');
+            chatState.selectedStory = storyElement.getAttribute('data-story');
+        }
+
+        function copyStory() {
+            if (!chatState.selectedStory) {
+                showToast('Please select a story first', 'warning');
+                return;
+            }
+
+            navigator.clipboard.writeText(chatState.selectedStory).then(() => {
+                showToast('Story copied! Paste it in the chat.', 'success');
+            }).catch(() => {
+                showToast('Failed to copy story', 'error');
+            });
+        }
+
+        // ============================================
+        // OUTPUT COPY
+        // ============================================
+        function copyOutput() {
+            if (chatState.messages.length === 0) {
+                showToast('No messages to copy', 'warning');
+                return;
+            }
+
+            const output = chatState.messages.map(msg => {
+                const prefix = msg.isUser ? 'You: ' : 'AI: ';
+                return prefix + msg.content;
+            }).join('\n\n');
+
+            navigator.clipboard.writeText(output).then(() => {
+                showToast('Output copied to clipboard!', 'success');
+            }).catch(() => {
+                showToast('Failed to copy output', 'error');
+            });
+        }
+
+        // ============================================
+        // EVENT LISTENERS
+        // ============================================
+        chatToggleBtn.addEventListener('click', toggleChat);
+        chatCloseBtn.addEventListener('click', closeChat);
+        sendBtn.addEventListener('click', sendMessage);
+        clearChatBtn.addEventListener('click', clearChat);
+        copyOutputBtn.addEventListener('click', copyOutput);
+        copyStoryBtn.addEventListener('click', copyStory);
+
+        // Textarea auto-resize
+        chatInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 80) + 'px';
+        });
+
+        // Send on Ctrl+Enter
+        chatInput.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Story selection
+        storiesList.addEventListener('click', function(e) {
+            const storyItem = e.target.closest('.story-item');
+            if (storyItem) {
+                selectStory(storyItem);
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Select first story by default
+            const firstStory = document.querySelector('.story-item');
+            if (firstStory) {
+                selectStory(firstStory);
+            }
+
+            console.log('✅ Testcase Generator Loaded');
+            console.log('📍 Session ID:', chatState.sessionId);
+            console.log('🔌 Langflow API:', LANGFLOW_CONFIG.api_url);
+            console.log('⚙️ Configuration:', LANGFLOW_CONFIG);
+            
+            // Test connection on load
+            testLangflowConnection();
+        });
+
+        // Test Langflow server connection
+        function testLangflowConnection() {
+            console.log('🔍 Testing Langflow server connection...');
+            console.log('🔑 Using API Key:', LANGFLOW_CONFIG.api_key.substring(0, 10) + '...');
+            
+            const testHeaders = {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${LANGFLOW_CONFIG.api_key}`,
+                "x-api-key": `${LANGFLOW_CONFIG.api_key}`
+            };
+            
+            // Test the flow endpoint directly
+            fetch(LANGFLOW_CONFIG.api_url, {
+                method: 'POST',
+                headers: testHeaders,
+                body: JSON.stringify({
+                    input: { text: "test" },
+                    session_id: chatState.sessionId
+                })
+            })
+            .then(response => {
+                console.log('✅ Langflow connection test - Status:', response.status);
+                if (!response.ok && response.status !== 401) {
+                    console.warn('⚠️ Status:', response.status, response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('✅ Langflow is responding:', data);
+                showToast('✅ Langflow connected successfully!', 'success');
+            })
+            .catch(error => {
+                console.error('❌ Connection error:', error.message);
+                showToast('⚠️ Cannot connect to Langflow - Make sure it\'s running', 'warning');
+            });
+        }
+    </script>
+</body>
+</html>
